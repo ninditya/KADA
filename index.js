@@ -2,7 +2,6 @@ import express from 'express';
 import notesRouter from './routers/notes.js';
 import mongoose from 'mongoose';
 import { Post } from './models/index.js';
-
 import dotenv from 'dotenv';
 
 dotenv.config();
@@ -11,12 +10,22 @@ const app = express();
 
 // Pastikan menggunakan port yang benar (biasanya 27017) dan protokol yang tepat
 const mongoURI = process.env.MONGO_URI;
-try {
-  await mongoose.connect(mongoURI);
-  console.log('Terhubung ke MongoDB');
-} catch (error) {
-  console.error('Gagal koneksi:', error);
+async function startServer() {
+  try {
+    await mongoose.connect(process.env.MONGO_URI);
+    console.log('Terhubung ke MongoDB');
+
+    app.listen(port, () => {
+      console.log(`Server running at http://localhost:${port}`);
+    });
+
+  } catch (error) {
+    console.error('Gagal koneksi:', error);
+    process.exit(1); // stop server kalau DB gagal
+  }
 }
+
+startServer();
 
 const port = 3000;
 
@@ -78,9 +87,9 @@ app.use((req, res) => {
 });
 
 // Implementing Error Handling Middleware
-app.use((req, res, next) => {
-  res.status(500);
-  res.json({ result:'fail', error: err.message });
+app.use((err, req, res, next) => {
+  console.log(err.message);
+  res.status(500).json({ result: 'fail', error: err.message });
 });
 
 /* ---------- ERROR MIDDLEWARE (HARUS PALING AKHIR) ---------- */
