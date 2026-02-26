@@ -7,9 +7,24 @@ import dotenv from 'dotenv';
 dotenv.config();
 
 const app = express();
+const port = 3000;
+
+/* ---------- MIDDLEWARE ---------- */
+app.use(express.json());
+app.use('/notes', notesRouter);
+
+/* ---------- ROUTES ---------- */
+app.get('/', (req, res) => {
+  res.send('Hello Nindit!');
+});
+
+// Implementing Error Handling Middleware
+app.use((err, req, res, next) => {
+  console.log(err.message);
+  res.status(500).json({ result: 'fail', error: err.message });
+});
 
 // Pastikan menggunakan port yang benar (biasanya 27017) dan protokol yang tepat
-const mongoURI = process.env.MONGO_URI;
 async function startServer() {
   try {
     await mongoose.connect(process.env.MONGO_URI);
@@ -27,22 +42,10 @@ async function startServer() {
 
 startServer();
 
-const port = 3000;
-
-app.use(express.json());
-app.use('/notes', notesRouter);
-
 /* ---------- GLOBAL MIDDLEWARE ---------- */
 app.use((req, res, next) => {
   console.log(`${req.method} ${req.url}`);
   next();
-});
-
-/* ---------- ROUTES ---------- */
-
-// Home
-app.get('/', (req, res) => {
-  res.send('Hello Nindit!');
 });
 
 // Path parameter
@@ -84,12 +87,6 @@ app.use((req, res) => {
     result: 'fail',
     error: `Route not found ${req.path}`
   });
-});
-
-// Implementing Error Handling Middleware
-app.use((err, req, res, next) => {
-  console.log(err.message);
-  res.status(500).json({ result: 'fail', error: err.message });
 });
 
 /* ---------- ERROR MIDDLEWARE (HARUS PALING AKHIR) ---------- */
