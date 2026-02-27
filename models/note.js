@@ -1,6 +1,7 @@
 let notes = [
   {
     id: 1,
+    author: 'Ninditya',
     title: 'first note',
     content: 'My first note is here.'
   }
@@ -23,6 +24,7 @@ export const create = (title, content) => {
 
   const newNote = {
     id: lastId + 1,
+    author,
     title,
     content
   };
@@ -40,6 +42,7 @@ export const update = (id, title, content) => {
 
   notes[index] = {
     ...notes[index],
+    author,
     title,
     content,
   };

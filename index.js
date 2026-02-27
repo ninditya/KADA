@@ -1,11 +1,12 @@
 import express from 'express';
-import notesRouter from './routers/notes.js';
 import mongoose from 'mongoose';
-import { Post } from './models/index.js';
 import dotenv from 'dotenv';
+import notesRouter from './routers/notes.js';
+import cors from 'cors';
 
 dotenv.config();
 
+// Cache Koneksi MongoDB (Pattern Serverless)
 let cached = global.mongoose;
 
 if (!cached) {
@@ -23,28 +24,30 @@ async function connectDB() {
   return cached.conn;
 }
 
+// Setup App
 const app = express();
-const port = 3000;
+const port = process.env.PORT || 3000;
 
-/* ---------- MIDDLEWARE ---------- */
+// Middleware
+app.use(cors());
 app.use(express.json());
-app.use('/notes', notesRouter);
 
-/* ---------- ROUTES ---------- */
-app.get('/', (req, res) => {
-  res.send('Hello Nindit!');
+app.use((req, res, next) => {
+  console.log(`${req.method} ${req.url}`);
+  next();
 });
 
-// Implementing Error Handling Middleware
-app.use((err, req, res, next) => {
-  console.log(err.message);
-  res.status(500).json({ result: 'fail', error: err.message });
+// Basic Route
+app.use('/notes', notesRouter);
+
+app.get('/', (req, res) => {
+  res.send('Hello Nindit!');
 });
 
 // Pastikan menggunakan port yang benar (biasanya 27017) dan protokol yang tepat
 async function startServer() {
   try {
-    await mongoose.connect(process.env.MONGO_URI);
+    await connectDB();
     console.log('Terhubung ke MongoDB');
 
     app.listen(port, () => {
@@ -56,15 +59,9 @@ async function startServer() {
     process.exit(1); // stop server kalau DB gagal
   }
 }
-
 startServer();
 
 /* ---------- GLOBAL MIDDLEWARE ---------- */
-app.use((req, res, next) => {
-  console.log(`${req.method} ${req.url}`);
-  next();
-});
-
 // Path parameter
 app.get('/say/:greeting', (req, res) => {
   res.send(req.params.greeting);
@@ -110,8 +107,4 @@ app.use((req, res) => {
 app.use((err, req, res, next) => {
   console.log('Error middleware executed:', err.message);
   res.status(500).send(err.message || 'Internal Server Error');
-});
-
-app.listen(port, () => {
-  console.log(`Example app listening at http://localhost:${port}`);
 });

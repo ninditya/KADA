@@ -27,13 +27,13 @@ router.get('/:id', async (req, res, next) => {
 
 // Create
 router.post('/', async (req, res, next) => {
-    const { title, content } = req.body;
-    if (!title || !content) {
-      return res.status(400).json({ result: 'fail', error: 'Title and content are required' });
+    const { author, title, content } = req.body;
+    if (!author || !title || !content) {
+      return res.status(400).json({ result: 'fail', error: 'Author, title, and content are required' });
     }
 
     try {
-      const note = await Post.create({ title, content });
+      const note = await Post.create({ author, title, content });
       res.status(201).json(note);
     } catch (e) {
       next(e);
@@ -45,7 +45,7 @@ router.put('/:id', async (req, res, next) => {
   try {
     const note = await Post.findByIdAndUpdate(
       req.params.id,
-      { title: req.body.title, content: req.body.content },
+      { author: req.body.author, title: req.body.title, content: req.body.content },
       { new: true }
     );
 
