@@ -1,3 +1,4 @@
+//ini file untuk di lokal
 let notes = [
   {
     id: 1,
@@ -19,7 +20,7 @@ export const get = (id) => {
   return note;
 };
 
-export const create = (title, content) => {
+export const create = (author, title, content) => {
   const lastId = notes.length ? notes[notes.length - 1].id : 0;
 
   const newNote = {
@@ -33,7 +34,7 @@ export const create = (title, content) => {
   return newNote;
 };
 
-export const update = (id, title, content) => {
+export const update = (id, author, title, content) => {
   const index = notes.findIndex((note) => note.id === id);
 
   if (index < 0) {

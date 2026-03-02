@@ -1,6 +1,5 @@
 import { Router } from 'express';
 import { Post } from '../models/index.js';
-// import * as Note from '../models/note.js';
 
 const router = Router();
 
@@ -13,6 +12,7 @@ router.get('/', async (req, res, next) => {
   } 
 });
 
+// Read
 router.get('/:id', async (req, res, next) => {
   try {
     const note = await Post.findById(req.params.id);

@@ -1,28 +1,11 @@
 import express from 'express';
-import mongoose from 'mongoose';
 import dotenv from 'dotenv';
 import notesRouter from './routers/notes.js';
+import userRouter from './routers/user.js';
+import { connectDatabases } from './models/index.js';
 import cors from 'cors';
 
 dotenv.config();
-
-// Cache Koneksi MongoDB (Pattern Serverless)
-let cached = global.mongoose;
-
-if (!cached) {
-  cached = global.mongoose = { conn: null, promise: null };
-}
-
-async function connectDB() {
-  if (cached.conn) return cached.conn;
-
-  if (!cached.promise) {
-    cached.promise = mongoose.connect(process.env.MONGO_URI);
-  }
-
-  cached.conn = await cached.promise;
-  return cached.conn;
-}
 
 // Setup App
 const app = express();
@@ -39,6 +22,7 @@ app.use((req, res, next) => {
 
 // Basic Route
 app.use('/notes', notesRouter);
+app.use('/user', userRouter);
 
 app.get('/', (req, res) => {
   res.send('Hello Nindit!');
@@ -47,8 +31,8 @@ app.get('/', (req, res) => {
 // Pastikan menggunakan port yang benar (biasanya 27017) dan protokol yang tepat
 async function startServer() {
   try {
-    await connectDB();
-    console.log('Terhubung ke MongoDB');
+    await connectDatabases();
+    console.log('Terhubung ke database');
 
     app.listen(port, () => {
       console.log(`Server running at http://localhost:${port}`);
