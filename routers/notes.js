@@ -1,11 +1,12 @@
 import { Router } from 'express';
-import { Post } from '../models/index.js';
+import { getModels } from '../models/index.js';
 // import * as Note from '../models/note.js';
 
 const router = Router();
 
 router.get('/', async (req, res, next) => {
   try {
+    const { Post } = getModels();
     const notes = await Post.find();
     res.json(notes);
   } catch (e) {
@@ -15,6 +16,7 @@ router.get('/', async (req, res, next) => {
 
 router.get('/:id', async (req, res, next) => {
   try {
+    const { Post } = getModels();
     const note = await Post.findById(req.params.id);
     if (!note) {
       return res.status(404).json({ result: 'fail', error: 'Note not found' });
@@ -33,6 +35,7 @@ router.post('/', async (req, res, next) => {
     }
 
     try {
+      const { Post } = getModels();
       const note = await Post.create({ author, title, content });
       res.status(201).json(note);
     } catch (e) {
@@ -43,6 +46,7 @@ router.post('/', async (req, res, next) => {
 // Update
 router.put('/:id', async (req, res, next) => {
   try {
+    const { Post } = getModels();
     const note = await Post.findByIdAndUpdate(
       req.params.id,
       { author: req.body.author, title: req.body.title, content: req.body.content },
@@ -62,6 +66,7 @@ router.put('/:id', async (req, res, next) => {
 // Delete 
 router.delete('/:id', async (req, res, next) => {
   try {
+    const { Post } = getModels();
     const note = await Post.findByIdAndDelete(req.params.id);
     if (!note) {
       return res.status(404).json({ result: 'fail', error: 'Note not found' });
