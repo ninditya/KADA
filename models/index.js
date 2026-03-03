@@ -2,66 +2,34 @@ import mongoose from 'mongoose';
 import PostSchema from './schemas/board.js';
 import UserSchema from './schemas/user.js';
 
-const DB_CACHE_KEY = '__kadaDbCache__';
+let models = null;
 
-const cached = global[DB_CACHE_KEY] || {
-  notesConn: null,
-  userConn: null,
-  notesPromise: null,
-  userPromise: null
-};
-
-global[DB_CACHE_KEY] = cached;
-
+// baca NOTES_MONGO_URI + USER_MONGO_URI, buka 2 koneksi Mongo, lalu inisialisasi model Post dan User.
 export async function connectDatabases() {
+  if (models) return models;
+
   const notesUri = process.env.NOTES_MONGO_URI;
   const userUri = process.env.USER_MONGO_URI;
 
-  if (!notesUri) {
-    throw new Error('NOTES_MONGO_URI is not defined');
+  if (!notesUri || !userUri) {
+    throw new Error('NOTES_MONGO_URI and USER_MONGO_URI are required');
   }
 
-  if (!userUri) {
-    throw new Error('USER_MONGO_URI is not defined');
-  }
+  const notesConn = await mongoose.createConnection(notesUri).asPromise();
+  const userConn = await mongoose.createConnection(userUri).asPromise();
 
-  if (!cached.notesConn) {
-    if (!cached.notesPromise) {
-      const notesConnection = mongoose.createConnection(notesUri);
-      cached.notesPromise = notesConnection.asPromise();
-    }
-    cached.notesConn = await cached.notesPromise;
-  }
-
-  if (!cached.userConn) {
-    if (!cached.userPromise) {
-      const userConnection = mongoose.createConnection(userUri);
-      cached.userPromise = userConnection.asPromise();
-    }
-    cached.userConn = await cached.userPromise;
-  }
-
-  if (!cached.notesConn.models.Post) {
-    cached.notesConn.model('Post', PostSchema);
-  }
-
-  if (!cached.userConn.models.User) {
-    cached.userConn.model('User', UserSchema);
-  }
-
-  return {
-    notesConn: cached.notesConn,
-    userConn: cached.userConn
+  models = {
+    Post: notesConn.model('Post', PostSchema),
+    User: userConn.model('User', UserSchema)
   };
+
+  return models;
 }
 
+// mengembalikan model siap pakai ke router; jika DB belum connect akan throw error.
 export function getModels() {
-  if (!cached.notesConn || !cached.userConn) {
-    throw new Error('Databases are not connected. Call connectDatabases() first.');
+  if (!models) {
+    throw new Error('Database is not connected. Call connectDatabases() first.');
   }
-
-  return {
-    Post: cached.notesConn.model('Post'),
-    User: cached.userConn.model('User')
-  };
+  return models;
 }

@@ -1,78 +1,52 @@
-import express from 'express';
-import dotenv from 'dotenv';
-import notesRouter from './routers/notes.js';
-import authRouter from './routers/auth.js';
-import { connectDatabases } from './models/index.js';
 import cors from 'cors';
+import dotenv from 'dotenv';
+import express from 'express';
+import authRouter from './routers/auth.js';
+import notesRouter from './routers/notes.js';
+import { validateRuntimeEnv } from './config/env.js';
+import { connectDatabases } from './models/index.js';
 
 dotenv.config();
 
 // Setup App
 const app = express();
-const port = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3000;
 
-// Middleware
 app.use(cors());
 app.use(express.json());
 
-app.use((req, res, next) => {
-  console.log(`${req.method} ${req.url}`);
-  next();
+// health check sederhana untuk memastikan backend hidup.
+app.get('/', (_req, res) => {
+  res.json({ message: 'Hello Nindit' });
 });
 
 // Basic Route
 app.use('/notes', notesRouter);
 app.use('/auth', authRouter);
 
-app.get('/', (req, res) => {
-  res.send('Hello Nindit!');
+// semua path yang tidak cocok route akan dibalas Route not found.
+app.use((req, res) => {
+  res.status(404).json({ result: 'fail', error: `Route not found ${req.path}` });
 });
 
-// Pastikan menggunakan port yang benar (biasanya 27017) dan protokol yang tepat
-async function startServer() {
+// menangkap error dari router (next(error)) dan kirim JSON error konsisten.
+app.use((err, _req, res, _next) => {
+  console.error(err);
+  res.status(500).json({ result: 'fail', error: err.message || 'Internal Server Error' });
+});
+
+// konek ke DB dulu lewat connectDatabases(), baru mulai listen port.
+async function start() {
   try {
+    validateRuntimeEnv();
     await connectDatabases();
-    console.log('Terhubung ke MongoDB notes dan user');
-
-    app.listen(port, () => {
-      console.log(`Server running at http://localhost:${port}`);
+    app.listen(PORT, () => {
+      console.log(`Server running at http://localhost:${PORT}`);
     });
-
   } catch (error) {
-    console.error('Gagal koneksi:', error);
-    process.exit(1); // stop server kalau DB gagal
+    console.error('Failed to start server:', error);
+    process.exit(1);
   }
 }
-startServer();
 
-/* ---------- GLOBAL MIDDLEWARE ---------- */
-// Path parameter
-app.get('/say/:greeting', (req, res) => {
-  res.send(req.params.greeting);
-});
-
-// Query parameter example: /search?q=test
-app.get('/search', (req, res) => {
-  const { q } = req.query;
-  res.send(`Search result for: ${q}`);
-});
-
-// Example protected route
-app.get('/dashboard', (req, res) => {
-  res.send('Welcome to dashboard');
-});
-
-// Route not found
-app.use((req, res) => {
-  res.status(404);
-  res.send({
-    result: 'fail',
-    error: `Route not found ${req.path}`
-  });
-});
-
-/* ---------- ERROR MIDDLEWARE (HARUS PALING AKHIR) ---------- */
-app.use((err, req, res, next) => {
-  console.log('Error middleware executed:', err.message);
-  res.status(500).send(err.message || 'Internal Server Error');
-});
+start();

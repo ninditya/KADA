@@ -1,60 +1,36 @@
-let notes = [
-  {
-    id: 1,
-    author: 'Ninditya',
-    title: 'first note',
-    content: 'My first note is here.'
-  }
-];
+// Legacy in-memory note helper (not used by active MongoDB routes)
+let notes = [];
+let nextId = 1;
 
-export const list = () => {
-  return notes.map(({ id, title }) => ({ id, title }));
-};
+// Mengembalikan semua note di memory.
+export function list() {
+  return notes;
+}
 
-export const get = (id) => {
-  const note = notes.find((note) => note.id === id);
-  if (!note) {
-    throw new Error('Note not found');
-  }
+// Mengambil satu note berdasarkan id.
+export function get(id) {
+  return notes.find((note) => note.id === Number(id)) || null;
+}
+
+// Menambahkan note baru dan auto-increment id.
+export function create({ author, title, content }) {
+  const note = { id: nextId++, author, title, content };
+  notes.push(note);
   return note;
-};
+}
 
-export const create = (title, content) => {
-  const lastId = notes.length ? notes[notes.length - 1].id : 0;
+// Memperbarui note jika id ditemukan.
+export function update(id, data) {
+  const note = get(id);
+  if (!note) return null;
 
-  const newNote = {
-    id: lastId + 1,
-    author,
-    title,
-    content
-  };
+  Object.assign(note, data);
+  return note;
+}
 
-  notes.push(newNote);
-  return newNote;
-};
-
-export const update = (id, title, content) => {
-  const index = notes.findIndex((note) => note.id === id);
-
-  if (index < 0) {
-    throw new Error('Note not found for update');
-  }
-
-  notes[index] = {
-    ...notes[index],
-    author,
-    title,
-    content,
-  };
-
-  return notes[index];
-};
-
-export const remove = (id) => {
- const exists = notes.some((note) => note.id === id);
-
- if (!exists) {
-   throw new Error('Note not found for deletion');
- }
- notes = notes.filter((note) => note.id !== id);
-};
+// Menghapus note berdasarkan id dan mengembalikan status berhasil/tidak.
+export function remove(id) {
+  const before = notes.length;
+  notes = notes.filter((note) => note.id !== Number(id));
+  return notes.length !== before;
+}
