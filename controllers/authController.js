@@ -60,8 +60,8 @@ export async function login(req, res, next) {
       getJwtSecret(),
       { expiresIn: '1h' }
     );
-
     res.json({ result: 'success', token });
+    
   } catch (error) {
     next(error);
   }
