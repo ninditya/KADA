@@ -8,7 +8,7 @@ function isWeakJwtSecret(secret) {
   );
 }
 
-// Mengambil JWT secret yang sudah lolos validasi keamanan minimum.
+// Mengambil JWT secret yang aman untuk sign/verify token.
 export function getJwtSecret() {
   const secret = process.env.JWT_SECRET;
 
@@ -21,7 +21,7 @@ export function getJwtSecret() {
   return secret;
 }
 
-// Validasi env wajib saat aplikasi start.
+// Validasi env penting saat server start agar fail-fast.
 export function validateRuntimeEnv() {
   getJwtSecret();
 }

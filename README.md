@@ -17,6 +17,10 @@
 - `POST /auth/signup`
 - `POST /auth/login`
 - `GET /auth/me` (Bearer token)
+- `POST /payments/transaction` (format sederhana ala instruktur)
+- `POST /payments/checkout`
+- `POST /payments/notification`
+- `GET /payments/:orderId/status`
 
 ## Env
 - `NOTES_MONGO_URI`
@@ -27,6 +31,10 @@
 - `SMTP_USER` (opsional)
 - `SMTP_PASS` (opsional)
 - `SMTP_FROM` (opsional, fallback ke `SMTP_USER`)
+- `IAT_MAX_AGE_SECONDS` (opsional, default `30`)
+- `MIDTRANS_SERVER_KEY`
+- `MIDTRANS_CLIENT_KEY`
+- `MIDTRANS_IS_PRODUCTION` (`true`/`false`)
 - `PORT` (optional)
 
 ## Auth body
@@ -36,3 +44,7 @@
 ## Auth response
 - Signup sukses: `user`, `emailSent`
 - Login sukses: `token`, `emailSent`
+
+## Payment body
+- Transaction (simple): `amount`, `first_name`, `email`
+- Checkout: `amount`, opsional `orderId`, `itemDetails`, `customerDetails`

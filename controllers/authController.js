@@ -1,5 +1,5 @@
 import jwt from 'jsonwebtoken';
-import { getJwtSecret } from '../config/env.js';
+import { getJwtSecret } from '../services/JWTSecret.js';
 import { getModels } from '../models/index.js';
 import { sendLoginSuccessEmail, sendSignupSuccessEmail } from '../services/emailService.js';
 

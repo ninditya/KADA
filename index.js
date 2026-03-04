@@ -3,7 +3,9 @@ import dotenv from 'dotenv';
 import express from 'express';
 import authRouter from './routers/auth.js';
 import notesRouter from './routers/notes.js';
-import { validateRuntimeEnv } from './config/env.js';
+import paymentsRouter from './routers/payments.js';
+import errorHandler, { notFoundHandler } from './middlewares/errorHandler.js';
+import { validateRuntimeEnv } from './services/JWTSecret.js';
 import { connectDatabases } from './models/index.js';
 
 dotenv.config();
@@ -23,17 +25,10 @@ app.get('/', (_req, res) => {
 // Basic Route
 app.use('/notes', notesRouter);
 app.use('/auth', authRouter);
+app.use('/payments', paymentsRouter);
 
-// semua path yang tidak cocok route akan dibalas Route not found.
-app.use((req, res) => {
-  res.status(404).json({ result: 'fail', error: `Route not found ${req.path}` });
-});
-
-// menangkap error dari router (next(error)) dan kirim JSON error konsisten.
-app.use((err, _req, res, _next) => {
-  console.error(err);
-  res.status(500).json({ result: 'fail', error: err.message || 'Internal Server Error' });
-});
+app.use(notFoundHandler);
+app.use(errorHandler);
 
 // konek ke DB dulu lewat connectDatabases(), baru mulai listen port.
 async function start() {
