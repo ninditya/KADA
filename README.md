@@ -38,7 +38,7 @@
 - `PORT` (optional)
 
 ## Auth body
-- Signup: `username`, `emailAddress`, `password`
+- Signup: `username`, `password`, opsional `emailAddress`
 - Login: `identifier` (boleh username/emailAddress) + `password`
 
 ## Auth response

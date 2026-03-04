@@ -2,6 +2,7 @@ import { Router } from 'express';
 import { createTransaction, createCheckout, handleNotification, getStatus } from '../controllers/paymentsController.js';
 
 const router = Router();
+
 router.get('/', (req, res) => {
   res.json({ message: 'Payments endpoint' });
 });
