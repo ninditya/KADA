@@ -22,4 +22,17 @@
 - `NOTES_MONGO_URI`
 - `USER_MONGO_URI`
 - `JWT_SECRET` (wajib, random, minimal 32 karakter)
+- `SMTP_HOST` (opsional, wajib jika ingin kirim email login/signup)
+- `SMTP_PORT` (opsional, contoh `587`)
+- `SMTP_USER` (opsional)
+- `SMTP_PASS` (opsional)
+- `SMTP_FROM` (opsional, fallback ke `SMTP_USER`)
 - `PORT` (optional)
+
+## Auth body
+- Signup: `username`, `emailAddress`, `password`
+- Login: `identifier` (boleh username/emailAddress) + `password`
+
+## Auth response
+- Signup sukses: `user`, `emailSent`
+- Login sukses: `token`, `emailSent`

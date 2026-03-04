@@ -8,6 +8,7 @@ const scrypt = promisify(_scrypt);
 const UserSchema = new Schema(
   {
     username: { type: String, required: true, trim: true, unique: true },
+    emailAddress: { type: String, required: true, trim: true, lowercase: true, unique: true, sparse: true },
     password: { type: String, required: true, minlength: 6, select: false }
   },
   { timestamps: true }

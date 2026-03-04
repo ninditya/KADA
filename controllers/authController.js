@@ -1,6 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { getJwtSecret } from '../config/env.js';
 import { getModels } from '../models/index.js';
+import { sendLoginSuccessEmail, sendSignupSuccessEmail } from '../services/emailService.js';
 
 // Menampilkan daftar endpoint auth yang tersedia.
 export function authInfo(_req, res) {
@@ -13,21 +14,46 @@ export function authInfo(_req, res) {
 // Mendaftarkan user baru setelah validasi input sederhana.
 export async function signup(req, res, next) {
   try {
-    const { username, password } = req.body;
+    const { username, emailAddress, password } = req.body;
 
-    if (!username || !password) {
-      return res.status(400).json({ result: 'fail', error: 'Username and password are required' });
+    if (!username || !emailAddress || !password) {
+      return res.status(400).json({
+        result: 'fail',
+        error: 'Username, emailAddress, and password are required'
+      });
     }
 
+    const normalizedEmail = emailAddress.toLowerCase();
     const { User } = getModels();
-    const existingUser = await User.findOne({ username });
+    const existingUser = await User.findOne({
+      $or: [{ username }, { emailAddress: normalizedEmail }]
+    });
 
     if (existingUser) {
-      return res.status(409).json({ result: 'fail', error: 'Username already exists' });
+      return res.status(409).json({
+        result: 'fail',
+        error: 'Username or emailAddress already exists'
+      });
     }
 
-    const user = await User.create({ username, password });
-    res.status(201).json({ result: 'success', user });
+    const user = await User.create({
+      username,
+      emailAddress: normalizedEmail,
+      password
+    });
+
+    let emailSent = false;
+
+    try {
+      emailSent = await sendSignupSuccessEmail({
+        to: user.emailAddress,
+        username: user.username
+      });
+    } catch (mailError) {
+      console.error('Failed to send signup email:', mailError.message);
+    }
+
+    res.status(201).json({ result: 'success', user, emailSent });
   } catch (error) {
     next(error);
   }
@@ -36,14 +62,21 @@ export async function signup(req, res, next) {
 // Memvalidasi kredensial lalu menghasilkan JWT.
 export async function login(req, res, next) {
   try {
-    const { username, password } = req.body;
+    const { password } = req.body;
+    const identifier = req.body.identifier || req.body.username || req.body.emailAddress;
 
-    if (!username || !password) {
-      return res.status(400).json({ result: 'fail', error: 'Username and password are required' });
+    if (!identifier || !password) {
+      return res.status(400).json({
+        result: 'fail',
+        error: 'identifier/emailAddress/username and password are required'
+      });
     }
 
+    const normalizedIdentifier = identifier.toLowerCase();
     const { User } = getModels();
-    const user = await User.findOne({ username }).select('+password');
+    const user = await User.findOne({
+      $or: [{ username: identifier }, { emailAddress: normalizedIdentifier }]
+    }).select('+password');
 
     if (!user) {
       return res.status(401).json({ result: 'fail', error: 'Invalid username or password' });
@@ -54,14 +87,25 @@ export async function login(req, res, next) {
     if (!valid) {
       return res.status(401).json({ result: 'fail', error: 'Invalid username or password' });
     }
-    // token JWT dibuat dengan payload minimal user ID dan username, serta masa berlaku 1 jam. Secret key diambil dari env.
+
     const token = jwt.sign(
       { sub: user._id.toString(), username: user.username },
       getJwtSecret(),
       { expiresIn: '1h' }
     );
-    res.json({ result: 'success', token });
-    
+
+    let emailSent = false;
+
+    try {
+      emailSent = await sendLoginSuccessEmail({
+        to: user.emailAddress,
+        username: user.username
+      });
+    } catch (mailError) {
+      console.error('Failed to send login email:', mailError.message);
+    }
+
+    res.json({ result: 'success', token, emailSent });
   } catch (error) {
     next(error);
   }
@@ -71,7 +115,7 @@ export async function login(req, res, next) {
 export async function me(req, res, next) {
   try {
     const { User } = getModels();
-    const user = await User.findById(req.user.sub); 
+    const user = await User.findById(req.user.sub);
 
     if (!user) {
       return res.status(404).json({ result: 'fail', error: 'User not found' });
