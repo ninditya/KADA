@@ -43,7 +43,7 @@
 
 ## Auth response
 - Signup sukses: `user`, `emailSent`
-- Login sukses: `token`, `emailSent`
+- Login sukses: `token`
 
 ## Payment body
 - Transaction (simple): `amount`, `first_name`, `email`

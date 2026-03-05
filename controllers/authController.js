@@ -1,7 +1,7 @@
 import jwt from 'jsonwebtoken';
 import { getJwtSecret } from '../services/JWTSecret.js';
 import { getModels } from '../models/index.js';
-import { sendLoginSuccessEmail, sendSignupSuccessEmail } from '../services/emailService.js';
+import { sendSignupSuccessEmail } from '../services/emailService.js';
 
 // Menampilkan daftar endpoint auth yang tersedia.
 export function authInfo(_req, res) {
@@ -94,18 +94,7 @@ export async function login(req, res, next) {
       { expiresIn: '1h' }
     );
 
-    let emailSent = false;
-
-    try {
-      emailSent = await sendLoginSuccessEmail({
-        to: user.emailAddress,
-        username: user.username
-      });
-    } catch (mailError) {
-      console.error('Failed to send login email:', mailError.message);
-    }
-
-    res.json({ result: 'success', token, emailSent });
+    res.json({ result: 'success', token });
   } catch (error) {
     next(error);
   }

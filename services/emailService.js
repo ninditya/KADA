@@ -24,21 +24,6 @@ function getTransporter() {
   return transporter;
 }
 
-// Mengirim email notifikasi ketika login berhasil.
-export async function sendLoginSuccessEmail({ to, username }) {
-  const smtp = getTransporter();
-  if (!smtp || !to) return false;
-
-  await smtp.sendMail({
-    from: process.env.SMTP_FROM || process.env.SMTP_USER,
-    to,
-    subject: 'Login Berhasil',
-    text: `Halo ${username}, login berhasil pada ${new Date().toISOString()}.`
-  });
-
-  return true;
-}
-
 // Mengirim email notifikasi ketika signup berhasil.
 export async function sendSignupSuccessEmail({ to, username }) {
   const smtp = getTransporter();
